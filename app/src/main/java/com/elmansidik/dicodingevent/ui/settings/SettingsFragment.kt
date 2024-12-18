@@ -11,7 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.viewModels
 import androidx.work.Constraints
-import androidx.work.Data.Builder
+import androidx.work.Data
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
@@ -37,6 +37,7 @@ class SettingsFragment : Fragment() {
     private lateinit var workManager: WorkManager
     private lateinit var periodicWorkRequest: PeriodicWorkRequest
 
+    // Permission launcher for notification
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -47,6 +48,7 @@ class SettingsFragment : Fragment() {
                     "Notifications permission granted",
                     Toast.LENGTH_SHORT
                 ).show()
+                setupDailyReminder() // Only setup reminder after permission is granted
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -64,6 +66,12 @@ class SettingsFragment : Fragment() {
 
         workManager = WorkManager.getInstance(requireContext())
 
+        // Check for notification permission
+        if (shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
+            requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        // Observing dark mode setting
         mainViewModel.getThemeSettings().observe(viewLifecycleOwner) { isDarkModeActive: Boolean ->
             if (isDarkModeActive) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
@@ -74,21 +82,22 @@ class SettingsFragment : Fragment() {
             }
         }
 
+        // Dark mode switch listener
         binding?.switchDarkMode?.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             mainViewModel.saveThemeSetting(isChecked)
         }
 
-
-
         return requireNotNull(binding?.root) { "Binding is null!" }
     }
 
+    // Setup daily reminder logic
     private fun setupDailyReminder() {
         mainViewModel.getUpcomingEvent()
         mainViewModel.upcomingEvent.observe(viewLifecycleOwner) { listItems ->
             if (listItems.isNotEmpty()) {
                 val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
+                // Filter valid events
                 val validEvents = listItems.filter { event ->
                     event.beginTime?.let {
                         val eventDate = sdf.parse(it)?.time ?: 0
@@ -109,8 +118,9 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    // Schedule a daily reminder worker
     private fun scheduleDailyReminder(event: ListEventsItem) {
-        val data = Builder()
+        val data = Data.Builder()
             .putString("event_name", event.name)
             .putString("event_time", event.beginTime)
             .build()
@@ -127,6 +137,7 @@ class SettingsFragment : Fragment() {
         workManager.enqueue(periodicWorkRequest)
     }
 
+    // Cancel any scheduled daily reminders
     private fun cancelDailyReminder() {
         if (this::periodicWorkRequest.isInitialized) {
             workManager.cancelWorkById(periodicWorkRequest.id)

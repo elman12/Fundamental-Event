@@ -8,29 +8,45 @@ import com.google.android.material.button.MaterialButton
 
 object UiHandler {
 
-    fun showLoading(isLoading: Boolean, progressBar: ProgressBar) {
-        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    fun showLoading(isLoading: Boolean, progressBar: ProgressBar?) {
+        if (progressBar != null) {
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
     }
 
     fun handleError(
         isError: Boolean,
         message: String?,
-        errorTextView: TextView,
-        refreshButton: MaterialButton,
-        recyclerView: RecyclerView,
+        errorTextView: TextView?,
+        refreshButton: MaterialButton?,
+        recyclerView: RecyclerView?,
         onRetry: () -> Unit
     ) {
         if (isError) {
-            errorTextView.visibility = View.VISIBLE
-            errorTextView.text = message ?: "Terjadi kesalahan"
-            refreshButton.visibility = View.VISIBLE
-            refreshButton.setOnClickListener {
-                onRetry()
+            if (errorTextView != null) {
+                errorTextView.visibility = View.VISIBLE
             }
-            recyclerView.visibility = View.VISIBLE
+            if (errorTextView != null) {
+                errorTextView.text = message ?: "Terjadi kesalahan"
+            }
+            if (refreshButton != null) {
+                refreshButton.visibility = View.VISIBLE
+            }
+            if (refreshButton != null) {
+                refreshButton.setOnClickListener {
+                    onRetry()
+                }
+            }
+            if (recyclerView != null) {
+                recyclerView.visibility = View.VISIBLE
+            }
         } else {
-            errorTextView.visibility = View.GONE
-            refreshButton.visibility = View.GONE
+            if (errorTextView != null) {
+                errorTextView.visibility = View.GONE
+            }
+            if (refreshButton != null) {
+                refreshButton.visibility = View.GONE
+            }
         }
     }
 }

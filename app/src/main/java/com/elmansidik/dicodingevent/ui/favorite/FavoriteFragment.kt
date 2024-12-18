@@ -27,6 +27,7 @@ class FavoriteFragment : Fragment() {
     private val mainViewModel: MainViewModel by viewModels {
         ViewModelFactory.getInstance(requireActivity())
     }
+
     private lateinit var adapterFavoriteEvent: AdapterFavoriteEvent
 
     override fun onCreateView(
@@ -39,52 +40,54 @@ class FavoriteFragment : Fragment() {
         setupAdapter()
         observeViewModel()
 
-        return requireNotNull(binding?.root) { "Binding is null!" }
+        return binding?.root ?: throw IllegalStateException("Binding cannot be null!")
     }
 
     private fun setupRecyclerView() {
-        binding?.apply {
-            val verticalLayout = LinearLayoutManager(requireContext())
-            rvFavoriteEvent.layoutManager = verticalLayout
-            val itemFavoriteEventDecoration =
-                DividerItemDecoration(requireContext(), verticalLayout.orientation)
-            rvFavoriteEvent.addItemDecoration(itemFavoriteEventDecoration)
+        binding?.rvFavoriteEvent?.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            addItemDecoration(DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL))
         }
     }
 
     private fun setupAdapter() {
         adapterFavoriteEvent = AdapterFavoriteEvent { eventId ->
-            val bundle = Bundle().apply {
-                eventId?.let { putInt("eventId", it) }
-            }
+            val bundle = Bundle().apply { eventId?.let { putInt("eventId", it) } }
             findNavController().navigate(R.id.navigation_detail, bundle)
         }
-
         binding?.rvFavoriteEvent?.adapter = adapterFavoriteEvent
     }
 
     private fun observeViewModel() {
-        binding?.apply {
-            mainViewModel.allFavoriteEvents.observe(viewLifecycleOwner) { listItems ->
-                Log.d("FavoriteFragment", "Observed Favorite Events: $listItems")
-                setFavoriteEvent(listItems)
-                mainViewModel.clearErrorMessage()
-            }
+        observeFavoriteEvents()
+        observeLoadingState()
+        observeErrorMessages()
+    }
 
-            mainViewModel.isLoading.observe(viewLifecycleOwner) {
-                showLoading(it, progressBar)
-            }
+    private fun observeFavoriteEvents() {
+        mainViewModel.allFavoriteEvents.observe(viewLifecycleOwner) { listItems ->
+            Log.d("FavoriteFragment", "Observed Favorite Events: $listItems")
+            setFavoriteEvent(listItems)
+            mainViewModel.clearErrorMessage()
+        }
+    }
 
-            mainViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
-                handleError(
-                    isError = errorMessage != null,
-                    message = errorMessage,
-                    errorTextView = tvErrorMessage,
-                    refreshButton = btnRefresh,
-                    recyclerView = rvFavoriteEvent
-                ) {
-                    mainViewModel.getAllFavoriteEvent()
-                }
+    private fun observeLoadingState() {
+        mainViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            showLoading(isLoading, binding?.progressBar)
+        }
+    }
+
+    private fun observeErrorMessages() {
+        mainViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            handleError(
+                isError = !errorMessage.isNullOrEmpty(),
+                message = errorMessage,
+                errorTextView = binding?.tvErrorMessage,
+                refreshButton = binding?.btnRefresh,
+                recyclerView = binding?.rvFavoriteEvent
+            ) {
+                mainViewModel.getAllFavoriteEvent()
             }
         }
     }

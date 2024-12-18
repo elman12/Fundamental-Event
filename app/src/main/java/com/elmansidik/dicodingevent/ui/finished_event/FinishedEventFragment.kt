@@ -10,18 +10,22 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.elmansidik.dicodingevent.R
+import com.elmansidik.dicodingevent.data.response_retrofit.response.ListEventsItem
 import com.elmansidik.dicodingevent.databinding.FragmentFinishedEventBinding
 import com.elmansidik.dicodingevent.viewmodel.AdapterVerticalEvent
 import com.elmansidik.dicodingevent.viewmodel.MainViewModel
 import com.elmansidik.dicodingevent.viewmodel.ViewModelFactory
 
+
 class FinishedEventFragment : Fragment() {
 
     private var _binding: FragmentFinishedEventBinding? = null
-    private val binding get() = _binding
+    private val binding get() = _binding!!
+
     private val mainViewModel: MainViewModel by viewModels {
         ViewModelFactory.getInstance(requireActivity())
     }
+
     private lateinit var adapterVertical: AdapterVerticalEvent
 
     override fun onCreateView(
@@ -30,47 +34,73 @@ class FinishedEventFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentFinishedEventBinding.inflate(inflater, container, false)
+
         setupRecyclerView()
         observeViewModel()
 
-        return requireNotNull(binding?.root) { "Binding is null!" }
+        return binding.root
     }
 
-
-
     private fun setupRecyclerView() {
-        binding?.apply {
-            val verticalLayout = LinearLayoutManager(requireContext())
-            rvFinishedEvent.layoutManager = verticalLayout
-            val itemFinishedEventDecoration =
-                DividerItemDecoration(requireContext(), verticalLayout.orientation)
-            rvFinishedEvent.addItemDecoration(itemFinishedEventDecoration)
+        binding.apply {
+            rvFinishedEvent.layoutManager = LinearLayoutManager(requireContext())
+            rvFinishedEvent.addItemDecoration(DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL))
+
             adapterVertical = AdapterVerticalEvent { eventId ->
-                val bundle = Bundle().apply {
-                    if (eventId != null) {
-                        putInt("eventId", eventId)
-                    }
-                }
-                findNavController().navigate(R.id.navigation_detail, bundle)
+                navigateToEventDetail(eventId)
             }
             rvFinishedEvent.adapter = adapterVertical
         }
     }
 
     private fun observeViewModel() {
-        mainViewModel.isLoading.observe(viewLifecycleOwner) { showLoading(it) }
+        mainViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            showLoading(isLoading)
+        }
 
+        // Perhatikan perubahan tipe data menjadi List<ListEventsItem>
         mainViewModel.finishedEvent.observe(viewLifecycleOwner) { listItems ->
-            adapterVertical.submitList(listItems)
+            // Perbarui dengan list tipe yang benar
+            updateEventList(listItems)
         }
 
         mainViewModel.searchEvent.observe(viewLifecycleOwner) { listItems ->
-            adapterVertical.submitList(listItems)
+            // Perbarui dengan list tipe yang benar
+            updateEventList(listItems)
+        }
+
+        mainViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            if (!errorMessage.isNullOrEmpty()) {
+                showErrorState(errorMessage)
+            }
         }
     }
 
+    private fun navigateToEventDetail(eventId: Int?) {
+        val bundle = Bundle().apply {
+            eventId?.let { putInt("eventId", it) }
+        }
+        findNavController().navigate(R.id.navigation_detail, bundle)
+    }
+
+    private fun updateEventList(listItems: List<ListEventsItem>) {
+        adapterVertical.submitList(listItems)  // Pastikan list yang dikirim adalah tipe yang benar
+    }
+
     private fun showLoading(isLoading: Boolean) {
-        binding?.progressBar?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun showErrorState(errorMessage: String) {
+        binding.apply {
+            tvErrorMessage.visibility = View.VISIBLE
+            tvErrorMessage.text = errorMessage
+            btnRefresh.visibility = View.VISIBLE
+
+            btnRefresh.setOnClickListener {
+                mainViewModel.getAllFinishedEvents() // Retry fetching the events
+            }
+        }
     }
 
     override fun onDestroyView() {

@@ -14,20 +14,27 @@ class ViewModelFactory private constructor(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            return MainViewModel(pref, eventRepository) as T
+        return when (modelClass) {
+            MainViewModel::class.java -> MainViewModel(pref, eventRepository) as T
+            else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
-        throw IllegalArgumentException("Unknown ViewModel class: " + modelClass.name)
     }
 
     companion object {
         @Volatile
         private var instance: ViewModelFactory? = null
-        fun getInstance(context: Context): ViewModelFactory =
-            instance ?: synchronized(this) {
-                val preferences = Injection.providePreferences(context)
-                val repository = Injection.provideRepository(context)
-                instance ?: ViewModelFactory(preferences, repository)
-            }.also { instance = it }
+
+        fun getInstance(context: Context): ViewModelFactory {
+            return instance ?: synchronized(this) {
+                instance ?: createFactory(context).also { instance = it }
+            }
+        }
+
+        // Helper function to create ViewModelFactory
+        private fun createFactory(context: Context): ViewModelFactory {
+            val preferences = Injection.providePreferences(context)
+            val repository = Injection.provideRepository(context)
+            return ViewModelFactory(preferences, repository)
+        }
     }
 }

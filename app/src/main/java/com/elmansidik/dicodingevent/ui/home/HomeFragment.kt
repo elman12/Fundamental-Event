@@ -1,6 +1,7 @@
 package com.elmansidik.dicodingevent.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.elmansidik.dicodingevent.R
 import com.elmansidik.dicodingevent.data.response_retrofit.response.ListEventsItem
 import com.elmansidik.dicodingevent.databinding.FragmentHomeBinding
@@ -46,24 +48,15 @@ class HomeFragment : Fragment() {
 
     private fun setupRecyclerViews() {
         binding?.apply {
-            val horizontalLayout =
-                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            rvUpcomingEvent.layoutManager = horizontalLayout
-            rvUpcomingEvent.addItemDecoration(
-                DividerItemDecoration(
-                    requireContext(),
-                    horizontalLayout.orientation
-                )
-            )
-            val verticalLayout = LinearLayoutManager(requireContext())
-            rvFinishedEvent.layoutManager = verticalLayout
-            rvFinishedEvent.addItemDecoration(
-                DividerItemDecoration(
-                    requireContext(),
-                    verticalLayout.orientation
-                )
-            )
+            setupRecyclerView(rvUpcomingEvent, LinearLayoutManager.HORIZONTAL)
+            setupRecyclerView(rvFinishedEvent, LinearLayoutManager.VERTICAL)
         }
+    }
+
+    private fun setupRecyclerView(recyclerView: RecyclerView, orientation: Int) {
+        val layoutManager = LinearLayoutManager(requireContext(), orientation, false)
+        recyclerView.layoutManager = layoutManager
+        recyclerView.addItemDecoration(DividerItemDecoration(requireContext(), layoutManager.orientation))
     }
 
     private fun setupAdapters() {
@@ -94,6 +87,11 @@ class HomeFragment : Fragment() {
 
     private fun observeViewModel() {
         binding?.apply {
+            mainViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+                Log.d("HomeFragment", "Loading state: $isLoading")
+                showLoading(isLoading, progressBar)
+            }
+
             mainViewModel.upcomingEvent.observe(viewLifecycleOwner) { listItems ->
                 setUpcomingEvent(listItems)
                 mainViewModel.clearErrorMessage()
@@ -102,9 +100,6 @@ class HomeFragment : Fragment() {
             mainViewModel.finishedEvent.observe(viewLifecycleOwner) { listItems ->
                 setFinishedEvent(listItems)
                 mainViewModel.clearErrorMessage()
-            }
-            mainViewModel.isLoading.observe(viewLifecycleOwner) {
-                showLoading(it, progressBar)
             }
 
             mainViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
@@ -122,15 +117,14 @@ class HomeFragment : Fragment() {
         }
     }
 
+
     private fun setUpcomingEvent(listUpcomingEvent: List<ListEventsItem>) {
-        val limitedList =
-            if (listUpcomingEvent.size > 5) listUpcomingEvent.take(5) else listUpcomingEvent
+        val limitedList = listUpcomingEvent.take(5)
         adapterHorizontal.submitList(limitedList)
     }
 
     private fun setFinishedEvent(listFinishedEvent: List<ListEventsItem>) {
-        val limitedList =
-            if (listFinishedEvent.size > 15) listFinishedEvent.takeLast(15) else listFinishedEvent
+        val limitedList = listFinishedEvent.takeLast(15)
         adapterVertical.submitList(limitedList)
     }
 

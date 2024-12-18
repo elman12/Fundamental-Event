@@ -11,9 +11,9 @@ import com.elmansidik.dicodingevent.utils.ListEventsDiffUtil
 
 class AdapterVerticalEvent(private val onItemClick: ((Int?) -> Unit)? = null) :
     ListAdapter<ListEventsItem, AdapterVerticalEvent.VerticalEventViewHolder>(ListEventsDiffUtil()) {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VerticalEventViewHolder {
-        val binding =
-            CardItemVerticalBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = CardItemVerticalBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return VerticalEventViewHolder(binding, onItemClick)
     }
 
@@ -24,17 +24,24 @@ class AdapterVerticalEvent(private val onItemClick: ((Int?) -> Unit)? = null) :
     class VerticalEventViewHolder(
         private val binding: CardItemVerticalBinding,
         private val onItemClick: ((Int?) -> Unit)?
-    ) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(event: ListEventsItem) {
-            binding.titleEvent.text = event.name
-            binding.descriptionEvent.text = event.summary
-            Glide.with(binding.imageEvent.context)
-                .load(event.imageLogo)
-                .into(binding.imageEvent)
+    ) : RecyclerView.ViewHolder(binding.root) {
 
-            binding.root.setOnClickListener {
-                onItemClick?.invoke(event.id)
+        // Bind data event ke tampilan
+        fun bind(event: ListEventsItem) {
+            binding.apply {
+                // Mengatur data di UI
+                titleEvent.text = event.name
+                descriptionEvent.text = event.summary
+
+                // Menggunakan Glide untuk memuat gambar
+                Glide.with(imageEvent.context)
+                    .load(event.imageLogo)
+                    .into(imageEvent)
+
+                // Menambahkan listener klik pada root view
+                root.setOnClickListener {
+                    onItemClick?.invoke(event.id)
+                }
             }
         }
     }

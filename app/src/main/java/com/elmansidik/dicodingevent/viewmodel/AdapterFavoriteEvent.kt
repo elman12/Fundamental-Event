@@ -19,23 +19,31 @@ class AdapterFavoriteEvent(private val onItemClick: ((Int?) -> Unit)? = null) :
     }
 
     override fun onBindViewHolder(holder: FavoriteEventViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val event = getItem(position)
+        holder.bind(event)
     }
 
     class FavoriteEventViewHolder(
         private val binding: CardItemVerticalBinding,
         private val onItemClick: ((Int?) -> Unit)?
-    ) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(event: FavoriteEvent) {
-            binding.titleEvent.text = event.name
-            binding.descriptionEvent.text = event.description
-            Glide.with(binding.imageEvent.context)
-                .load(event.image)
-                .into(binding.imageEvent)
+    ) : RecyclerView.ViewHolder(binding.root) {
 
-            binding.root.setOnClickListener {
-                onItemClick?.invoke(event.eventId)
+        // Function to bind the event to the view
+        fun bind(event: FavoriteEvent) {
+            binding.apply {
+                // Set event data to the views
+                titleEvent.text = event.name
+                descriptionEvent.text = event.description
+
+                // Load image using Glide
+                Glide.with(imageEvent.context)
+                    .load(event.image)
+                    .into(imageEvent)
+
+                // Set click listener for root view
+                root.setOnClickListener {
+                    onItemClick?.invoke(event.eventId)
+                }
             }
         }
     }
@@ -43,20 +51,16 @@ class AdapterFavoriteEvent(private val onItemClick: ((Int?) -> Unit)? = null) :
     companion object {
         val DIFF_CALLBACK: DiffUtil.ItemCallback<FavoriteEvent> =
             object : DiffUtil.ItemCallback<FavoriteEvent>() {
-                override fun areItemsTheSame(
-                    oldItem: FavoriteEvent,
-                    newItem: FavoriteEvent
-                ): Boolean {
+
+                // Compare items based on a unique identifier (id)
+                override fun areItemsTheSame(oldItem: FavoriteEvent, newItem: FavoriteEvent): Boolean {
                     return oldItem.id == newItem.id
                 }
 
-                override fun areContentsTheSame(
-                    oldItem: FavoriteEvent,
-                    newItem: FavoriteEvent
-                ): Boolean {
+                // Compare the contents of the items
+                override fun areContentsTheSame(oldItem: FavoriteEvent, newItem: FavoriteEvent): Boolean {
                     return oldItem == newItem
                 }
             }
     }
 }
-

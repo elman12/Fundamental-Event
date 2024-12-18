@@ -11,9 +11,9 @@ import com.elmansidik.dicodingevent.utils.ListEventsDiffUtil
 
 class AdapterHorizontalEvent(private val onItemClick: ((Int?) -> Unit)? = null) :
     ListAdapter<ListEventsItem, AdapterHorizontalEvent.HorizontalEventViewHolder>(ListEventsDiffUtil()) {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HorizontalEventViewHolder {
-        val binding =
-            CardItemHorizontalBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = CardItemHorizontalBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return HorizontalEventViewHolder(binding, onItemClick)
     }
 
@@ -24,16 +24,21 @@ class AdapterHorizontalEvent(private val onItemClick: ((Int?) -> Unit)? = null) 
     class HorizontalEventViewHolder(
         private val binding: CardItemHorizontalBinding,
         private val onItemClick: ((Int?) -> Unit)?
-    ) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(event: ListEventsItem) {
-            binding.titleEvent.text = event.name
-            Glide.with(binding.imageEvent.context)
-                .load(event.imageLogo)
-                .into(binding.imageEvent)
+    ) : RecyclerView.ViewHolder(binding.root) {
 
-            binding.root.setOnClickListener {
-                onItemClick?.invoke(event.id)
+        // Bind data event ke dalam tampilan
+        fun bind(event: ListEventsItem) {
+            binding.apply {
+                // Mengatur data di UI
+                titleEvent.text = event.name
+                Glide.with(imageEvent.context)
+                    .load(event.imageLogo)
+                    .into(imageEvent)
+
+                // Menambahkan listener klik pada item
+                root.setOnClickListener {
+                    onItemClick?.invoke(event.id)
+                }
             }
         }
     }

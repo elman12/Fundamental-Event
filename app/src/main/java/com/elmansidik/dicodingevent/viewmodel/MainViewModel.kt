@@ -143,4 +143,8 @@ class MainViewModel(
     fun clearErrorMessage() {
         _errorMessage.value = null
     }
+
+    fun getAllFinishedEvents() {
+        TODO("Not yet implemented")
+    }
 }
