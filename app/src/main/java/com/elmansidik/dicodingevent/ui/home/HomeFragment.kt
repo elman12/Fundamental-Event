@@ -82,14 +82,18 @@ class HomeFragment : Fragment() {
             rvUpcomingEvent.adapter = adapterHorizontal
             rvFinishedEvent.adapter = adapterVertical
         }
-
     }
 
     private fun observeViewModel() {
         binding?.apply {
-            mainViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-                Log.d("HomeFragment", "Loading state: $isLoading")
-                showLoading(isLoading, progressBar)
+            mainViewModel.isLoadingUpcoming.observe(viewLifecycleOwner) { isLoading ->
+                Log.d("HomeFragment", "Loading upcoming state: $isLoading")
+                progressBarUpcoming.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+
+            mainViewModel.isLoadingFinished.observe(viewLifecycleOwner) { isLoading ->
+                Log.d("HomeFragment", "Loading finished state: $isLoading")
+                progressBarFinished.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
 
             mainViewModel.upcomingEvent.observe(viewLifecycleOwner) { listItems ->
@@ -116,7 +120,6 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
 
     private fun setUpcomingEvent(listUpcomingEvent: List<ListEventsItem>) {
         val limitedList = listUpcomingEvent.take(5)

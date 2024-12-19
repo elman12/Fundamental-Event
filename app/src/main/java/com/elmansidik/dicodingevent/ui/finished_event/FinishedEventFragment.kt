@@ -58,14 +58,7 @@ class FinishedEventFragment : Fragment() {
             showLoading(isLoading)
         }
 
-        // Perhatikan perubahan tipe data menjadi List<ListEventsItem>
         mainViewModel.finishedEvent.observe(viewLifecycleOwner) { listItems ->
-            // Perbarui dengan list tipe yang benar
-            updateEventList(listItems)
-        }
-
-        mainViewModel.searchEvent.observe(viewLifecycleOwner) { listItems ->
-            // Perbarui dengan list tipe yang benar
             updateEventList(listItems)
         }
 
@@ -75,6 +68,12 @@ class FinishedEventFragment : Fragment() {
             }
         }
     }
+
+    // Pastikan Anda memanggil getAllFinishedEvents() di tempat yang tepat
+    private fun fetchFinishedEvents() {
+        mainViewModel.getAllFinishedEvents() // Memanggil fungsi untuk mengambil data
+    }
+
 
     private fun navigateToEventDetail(eventId: Int?) {
         val bundle = Bundle().apply {

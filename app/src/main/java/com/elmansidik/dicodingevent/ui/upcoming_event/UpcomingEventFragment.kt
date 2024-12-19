@@ -39,6 +39,9 @@ class UpcomingEventFragment : Fragment() {
         setupAdapter()
         observeViewModel()
 
+        // Memanggil getUpcomingEvent untuk memulai pengambilan data
+        mainViewModel.getUpcomingEvent()
+
         return requireNotNull(binding?.root) { "Binding is null!" }
     }
 
@@ -63,8 +66,9 @@ class UpcomingEventFragment : Fragment() {
                 clearErrorMessage()
             })
 
-            isLoading.observe(viewLifecycleOwner, Observer { isLoading ->
-                UiHandler.showLoading(isLoading, binding?.progressBar)
+            isLoadingUpcoming.observe(viewLifecycleOwner, Observer { isLoading ->
+                // Tampilkan atau sembunyikan ProgressBar berdasarkan status loading
+                binding?.progressBar?.visibility = if (isLoading) View.VISIBLE else View.GONE
             })
 
             errorMessage.observe(viewLifecycleOwner, Observer { errorMessage ->
@@ -80,6 +84,7 @@ class UpcomingEventFragment : Fragment() {
             })
         }
     }
+
 
     private fun setUpcomingEvent(events: List<ListEventsItem>) {
         if (events.isNotEmpty()) {

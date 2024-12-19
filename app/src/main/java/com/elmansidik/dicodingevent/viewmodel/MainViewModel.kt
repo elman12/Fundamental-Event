@@ -18,6 +18,14 @@ class MainViewModel(
     private val eventRepository: EventRepository
 ) : ViewModel() {
 
+    // Variabel LiveData untuk status loading
+    private val _isLoadingUpcoming = MutableLiveData<Boolean>()
+    val isLoadingUpcoming: LiveData<Boolean> = _isLoadingUpcoming
+
+    private val _isLoadingFinished = MutableLiveData<Boolean>()
+    val isLoadingFinished: LiveData<Boolean> = _isLoadingFinished
+
+    // Variabel lainnya
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
     private val _isLoading = MutableLiveData<Boolean>()
@@ -40,10 +48,10 @@ class MainViewModel(
     }
 
     fun getUpcomingEvent() {
-        _isLoading.value = true
+        _isLoadingUpcoming.value = true // Set loading to true
         viewModelScope.launch {
             val result = eventRepository.getUpcomingEvent()
-            _isLoading.value = false
+            _isLoadingUpcoming.value = false // Set loading to false
             result.onSuccess {
                 _upcomingEvent.value = it
                 clearErrorMessage()
@@ -54,10 +62,10 @@ class MainViewModel(
     }
 
     fun getFinishedEvent() {
-        _isLoading.value = true
+        _isLoadingFinished.value = true // Set loading to true
         viewModelScope.launch {
             val result = eventRepository.getFinishedEvent()
-            _isLoading.value = false
+            _isLoadingFinished.value = false // Set loading to false
             result.onSuccess {
                 _finishedEvent.value = it
                 clearErrorMessage()
